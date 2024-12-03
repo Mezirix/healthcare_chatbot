@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Chatbot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .chatbox {
+            width: 500px;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chatbox h2 {
+            text-align: center;
+            color: #333;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .chatlog {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 18px;
+            line-height: 1.6;
+            font-weight: bold;
+        }
+
+        .chatlog div {
+            margin-bottom: 15px;
+        }
+
+        .chatlog .user {
+            color: #0066cc;
+        }
+
+        .chatlog .bot {
+            color: #009933;
+        }
+
+        .input-container {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .input-container textarea {
+            flex-grow: 1;
+            resize: none;
+            height: 70px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .input-container button {
+            margin-left: 15px;
+            padding: 0 25px;
+            background-color: #0066cc;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .input-container button:hover {
+            background-color: #005bb5;
+        }
+
+        /* Styling the placeholder text */
+        .input-container textarea::placeholder {
+            color: #666;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* Quick reply buttons */
+        .quick-reply {
+            background-color: #e6e6e6;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 5px 2px;
+            cursor: pointer;
+        }
+
+        .quick-reply:hover {
+            background-color: #d5d5d5;
+        }
+
+        /* Dark theme */
+        .dark-theme {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .dark-theme .chatbox {
+            background-color: #444;
+            color: #fff;
+        }
+
+        .dark-theme .chatlog {
+            background-color: #555;
+            border: 1px solid #666;
+        }
+
+        .dark-theme .input-container textarea {
+            background-color: #666;
+            color: #fff;
+            border: 1px solid #777;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chatbox">
+        <h2>Healthcare Chatbot</h2>
+        <div class="chatlog" id="chatlog"></div>
+        <div class="input-container">
+            <textarea id="user_input" placeholder="Ask me anything..."></textarea>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <button onclick="toggleTheme()" aria-label="Toggle Theme">Toggle Theme</button>
+    </div>
+
+    <script>
+        function sendMessage(userInputOverride) {
+            const userInput = userInputOverride || document.getElementById('user_input').value;
+            if (userInput) {
+                const chatLog = document.getElementById('chatlog');
+                chatLog.innerHTML += "<div class='user'><strong>You:</strong> " + userInput + "</div>";
+
+                // Show typing indicator
+                const typingIndicator = "<div class='bot'><strong>Bot:</strong> Typing...</div>";
+                chatLog.innerHTML += typingIndicator;
+
+                fetch('/get_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'user_input=' + encodeURIComponent(userInput)
+                })
+                    .then(response => response.text())
+                    .then(data => {
+                        chatLog.innerHTML = chatLog.innerHTML.replace(typingIndicator, '');
+                        chatLog.innerHTML += "<div class='bot'><strong>Bot:</strong> " + data + "</div>";
+                        document.getElementById('user_input').value = "";
+
+                        // Add quick reply options
+                        const quickReplies = ["How can I boost my immunity?", "Tell me about flu symptoms"];
+                        quickReplies.forEach(reply => {
+                            const button = document.createElement("button");
+                            button.className = "quick-reply";
+                            button.innerText = reply;
+                            button.onclick = () => sendMessage(reply);
+                            chatLog.appendChild(button);
+                        });
+
+                        chatLog.scrollTop = chatLog.scrollHeight;  // Scroll to the bottom after a new message
+                    });
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+        }
+    </script>
+</body>
+
+</html>
